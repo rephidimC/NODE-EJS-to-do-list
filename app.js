@@ -2,6 +2,7 @@
 const express= require("express");
 const app = express();
 const mongoose = require("mongoose");
+const _ = require("lodash");
 const https = require("https");
 const bodyParser = require("body-parser");
 //Below is requiring a local js file that houses jS function for date.
@@ -168,9 +169,8 @@ app.post("/", function(req,res) {
       // })
       foundList.save();
       res.redirect("/" + listName)
-    })
+    });
   }
-
 });
 
 
@@ -178,9 +178,9 @@ app.post("/", function(req,res) {
 app.post("/delete", function(req, res) {
   const checkedItemId = req.body.checkbox;
   console.log(checkedItemId);
-  const listName = req.body.list;
+  const listName = req.body.listName;
 
-  if (listname === dateToday) {
+  if (listName === dateToday) {
     Item.findByIdAndRemove(checkedItemId, function(err, doc) {
       if (!err) {
             console.log(doc);
@@ -191,22 +191,26 @@ app.post("/delete", function(req, res) {
           }
     });
   } else {
-
+    List.findOneAndUpdate({name: listName}, {$pull: {items: {_id: checkedItemId}}}, function(err, foundList){
+      if (!err){
+        res.redirect("/" + listName);
+      }
+    });
   }
 
 
 
 });
 
-app.post("/:customListName", function(req,res) {
-  var newAddition = req.body.new;
-
-  var item = new Item ({
-    name : newAddition
-  });
-  item.save();
-  res.redirect("/:customListName");
-});
+// app.post("/:customListName", function(req,res) {
+//   var newAddition = req.body.new;
+//
+//   var item = new Item ({
+//     name : newAddition
+//   });
+//   item.save();
+//   res.redirect("/:customListName");
+// });
 
 // app.get("/:customListName", function(req, res) {
 //   var requestedPage = req.params.customListName;
@@ -244,8 +248,6 @@ let port = process.env.PORT;
 if (port == null || port == "") {
   port = 3000;
 }
-app.listen(port);
-
 
 app.listen(port, function(res, req) {
   console.log("Server has started successfully");
